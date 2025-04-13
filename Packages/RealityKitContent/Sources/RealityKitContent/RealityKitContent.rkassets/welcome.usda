@@ -1,0 +1,65 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Reality Composer Pro Version 2.0 (448.100.13)"
+    }
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    def "AZ_welcome" (
+        active = true
+        customData = {
+            float3 rotationEulerHint = (-1.5707964, 0, 0)
+        }
+        prepend references = @Assets/welcome/AZ-welcome.usdc@
+    )
+    {
+        quatf xformOp:orient = (0.70710677, -0.70710677, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (0, -3.7718564e-8, -0.5787381)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        over "_materials"
+        {
+            over "Material_001"
+            {
+                token outputs:mtlx:surface.connect = </Root/AZ_welcome/_materials/Material_001/UnlitSurface.outputs:out>
+                token outputs:realitykit:vertex
+                token outputs:surface.connect = </Root/AZ_welcome/_materials/Material_001/Principled_BSDF.outputs:surface>
+                float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (193.96094, 155.44922)
+                int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 4
+
+                over "Principled_BSDF" (
+                    active = false
+                )
+                {
+                }
+
+                def Shader "Image"
+                {
+                    uniform token info:id = "ND_image_color3"
+                    asset inputs:file = @Assets/welcome/AZ-welcome.jpg@
+                    string inputs:filtertype
+                    color3f outputs:out
+                    float2 ui:nodegraph:node:pos = (-505.34375, 16.53125)
+                    int ui:nodegraph:node:stackingOrder = 2
+                }
+
+                def Shader "UnlitSurface"
+                {
+                    uniform token info:id = "ND_realitykit_unlit_surfaceshader"
+                    color3f inputs:color.connect = </Root/AZ_welcome/_materials/Material_001/Image.outputs:out>
+                    bool inputs:hasPremultipliedAlpha
+                    token outputs:out
+                    float2 ui:nodegraph:node:pos = (-228.28516, 88.20703)
+                    int ui:nodegraph:node:stackingOrder = 3
+                }
+            }
+        }
+    }
+}
+

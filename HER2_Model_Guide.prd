@@ -1,0 +1,47 @@
+# HER2-Trastuzumab 3D Model Creation Guide
+
+## Objective
+Create a scientifically accurate and visually engaging 3D model of the HER2 protein complexed with trastuzumab (Herceptin) antibody, optimized for use in visionOS 2 projects and AR/VR environments.
+
+## Source Data
+- Protein Data Bank (PDB) file: [PDB ID 1N8Z](https://www.rcsb.org/structure/1N8Z)
+  - High-resolution atomic coordinates of HER2 and trastuzumab.
+
+## Workflow
+
+### Step 1: Obtain Structure Data
+- Download the HER2-Trastuzumab complex structure from the [RCSB PDB website](https://www.rcsb.org/).
+
+### Step 2: Visualization and Conversion
+- Use PyMOL or UCSF Chimera:
+  - Load the downloaded PDB file.
+  - Generate a surface or ribbon representation to clearly visualize interaction.
+  - Export as OBJ or Collada (DAE) format for compatibility with Blender.
+
+### Step 3: Blender Import
+- Import the converted OBJ or DAE file into Blender.
+- Verify mesh integrity and model scale.
+
+### Step 4: Optimization for AR/VR
+- Ensure the model's polygon count remains manageable for real-time AR rendering (ideally below 100,000 polygons).
+- Optimize the mesh:
+  - Simplify geometry where needed.
+  - Use decimation modifiers judiciously.
+
+### Step 5: Texturing and Shading
+- Apply visually appealing and scientifically illustrative textures:
+  - HER2 protein: Suggested color blue.
+  - Trastuzumab antibody: Suggested color pink or red.
+- Adjust materials for clear visual differentiation and readability.
+
+### Step 6: Export for visionOS
+- Export optimized and textured model to USDZ format, ensuring compatibility with Apple Vision Pro and visionOS 2.
+
+## Final Deliverables
+- Optimized USDZ model file for visionOS.
+- Original Blender source file (.blend).
+- Documentation noting the PDB source, conversion settings, and any optimization steps taken.
+
+## Usage
+- Integrate the completed model into the visionOS 2 SwiftUI-based viewer project for interactive 3D visualization.
+
