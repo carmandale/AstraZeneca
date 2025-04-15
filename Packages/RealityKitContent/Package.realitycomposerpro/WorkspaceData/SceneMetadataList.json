@@ -76,15 +76,6 @@
       [
         "146C102F-A8D8-4F8B-9E9F-BB035F939B1D",
         "Root",
-        "CompleteStructure"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "146C102F-A8D8-4F8B-9E9F-BB035F939B1D",
-        "Root",
         "HER2",
         "_oge"
       ],
@@ -97,6 +88,17 @@
         "Root",
         "CompleteStructure",
         "_oge"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "146C102F-A8D8-4F8B-9E9F-BB035F939B1D",
+        "Root",
+        "gestureTarget",
+        "CompleteStructure",
+        "combinedModel"
       ],
       {
         "isExpanded" : true,
@@ -157,8 +159,8 @@
       [
         "453156A4-6945-46E9-945B-6CEE02A5362E",
         "root",
-        "_n8z_pdb1_gz",
-        "_n8z_pdb1_gz_C_SES_surface"
+        "Transform",
+        "combinedModel"
       ],
       {
         "isExpanded" : true,
@@ -184,7 +186,8 @@
       [
         "453156A4-6945-46E9-945B-6CEE02A5362E",
         "root",
-        "_materials"
+        "_n8z_pdb1_gz",
+        "_n8z_pdb1_gz_C_SES_surface"
       ],
       {
         "isExpanded" : true,
@@ -193,7 +196,7 @@
       [
         "453156A4-6945-46E9-945B-6CEE02A5362E",
         "root",
-        "_oge"
+        "combinedModel"
       ],
       {
         "isExpanded" : true,

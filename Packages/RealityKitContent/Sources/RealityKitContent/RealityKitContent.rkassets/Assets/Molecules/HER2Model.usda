@@ -10,8 +10,24 @@
 
 def Xform "Root"
 {
-    reorder nameChildren = ["CompleteStructure", "ImageBasedLightReceiver", "ImageBasedLight"]
-    def "CompleteStructure" (
+    reorder nameChildren = ["ImageBasedLightReceiver", "ImageBasedLight", "gestureTarget", "gestureTarget"]
+    def RealityKitComponent "ImageBasedLightReceiver"
+    {
+        rel iblEntity = </Root>
+        uniform token info:id = "RealityKit.ImageBasedLightReceiver"
+    }
+
+    def RealityKitComponent "ImageBasedLight"
+    {
+        token blendMode = "single"
+        bool enableBlend = 0
+        asset ibl = @../courtyard.hdr@
+        uniform token info:id = "RealityKit.ImageBasedLight"
+        float intensityExponent = 0
+        bool isGlobalIBL = 0
+    }
+
+    def "gestureTarget" (
         active = true
         customData = {
             float3 rotationEulerHint = (-1.5707964, 0, 0)
@@ -19,8 +35,9 @@ def Xform "Root"
         references = @HER2.usdc@
     )
     {
-        quatf xformOp:orient = (0.70710677, -0.70710677, 0, 0)
-        float3 xformOp:scale = (1, 1, 1)
+        quatf xformOp:orient = (0.7071067, -0.70710677, 0, 0)
+        float3 xformOp:scale = (0.9999998, 0.9999998, 0.9999998)
+        float3 xformOp:translate = (0, 0, 0)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
 
         over "_n8z_pdb1_gz"
@@ -165,56 +182,41 @@ def Xform "Root"
             )
             {
             }
+        }
 
-            def Xform "gestureTarget" (
-                active = true
-            )
+        def RealityKitComponent "InputTarget"
+        {
+            uniform token info:id = "RealityKit.InputTarget"
+        }
+
+        def RealityKitComponent "Collider"
+        {
+            uint group = 1
+            uniform token info:id = "RealityKit.Collider"
+            uint mask = 4294967295
+            token type = "Default"
+
+            def RealityKitStruct "Shape"
             {
-                quatf xformOp:orient = (0.6530335, -0.27119613, 0.7003598, 0.09744723)
-                float3 xformOp:scale = (100.00009, 100.0001, 100.00009)
-                float3 xformOp:translate = (0, 0, 0)
-                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                float3 extent = (1.424484, 1.4955432, 1.6164558)
+                token shapeType = "Box"
 
-                def RealityKitComponent "InputTarget"
+                def RealityKitStruct "pose"
                 {
-                    uniform token info:id = "RealityKit.InputTarget"
-                }
-
-                def RealityKitComponent "Collider"
-                {
-                    uint group = 1
-                    uniform token info:id = "RealityKit.Collider"
-                    uint mask = 4294967295
-                    token type = "Default"
-
-                    def RealityKitStruct "Shape"
-                    {
-                        float3 extent = (1.4, 1.4, 1.4)
-                        token shapeType = "Box"
-
-                        def RealityKitStruct "pose"
-                        {
-                        }
-                    }
+                    float3 position = (0.0885568, 0.016035318, 0.001286)
                 }
             }
         }
-    }
 
-    def RealityKitComponent "ImageBasedLightReceiver"
-    {
-        rel iblEntity = </Root>
-        uniform token info:id = "RealityKit.ImageBasedLightReceiver"
-    }
-
-    def RealityKitComponent "ImageBasedLight"
-    {
-        token blendMode = "single"
-        bool enableBlend = 0
-        asset ibl = @../courtyard.hdr@
-        uniform token info:id = "RealityKit.ImageBasedLight"
-        float intensityExponent = 0
-        bool isGlobalIBL = 0
+        def RealityKitCustomComponent "RealityKitContent_GestureComponent"
+        {
+            bool canDrag = 0
+            bool canRotate = 1
+            bool canScale = 0
+            uniform token info:id = "RealityKitContent.GestureComponent"
+            bool pivotOnDrag = 0
+            bool preserveOrientationOnPivotDrag = 0
+        }
     }
 }
 

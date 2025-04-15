@@ -14,19 +14,10 @@ struct MoleculesModelView: View {
     @Environment(MoleculesViewModel.self) private var viewModel
     @Environment(AppModel.self) private var appModel
     
-    // State for gestures
-    @State private var rotationAngle = Angle(degrees: 0)
-    @State private var dragOffset: CGSize = .zero
-    @State private var startAngle: Angle? = nil
-    @State private var entityToRotate: Entity? // Holds reference to rotationEntity
-    @State private var rotationVelocity = SIMD3<Float>(0, 0, 0)
-    @State private var isDragging: Bool = false
-    @State private var lastUpdateTime: CFTimeInterval = CACurrentMediaTime()
-    @State private var timer: Timer?
-    
     // State to hold references to RealityKit entities created in make
     @State private var parentEntity: Entity? = nil
     @State private var rotationEntity: Entity? = nil
+
     
     var body: some View {
         RealityView { content in
@@ -35,161 +26,94 @@ struct MoleculesModelView: View {
             // Create parent and rotation entities
             let parentEntity = Entity()
             parentEntity.name = "ViewRoot"
-            parentEntity.scale = [0.2, 0.2, 0.2]
+            parentEntity.scale = [0.4, 0.4, 0.4]
             let rotationEntity = Entity()
             rotationEntity.name = "RotationContainer"
             parentEntity.addChild(rotationEntity)
             content.add(parentEntity)
             
-            // Store references for updates
-            self.entityToRotate = rotationEntity // Store for gesture
-            Logger.debug("RealityView make: Stored references to parent/rotation entities.")
+            // Store references for the .task closure
+            self.parentEntity = parentEntity
+            self.rotationEntity = rotationEntity
             
-            // Model loading is handled by the ViewModel via .task
+            self.parentEntity?.components.set(RotationComponent())
             
         } update: { content in
-            // --- Update Closure --- 
-            guard let parentEntityFromContent = content.entities.first,
-                  let rotationEntityFromContent = parentEntityFromContent.children.first else {
-                // Log if we can't even get the basic structure from content
-                Logger.error("RealityView update: Could not find parent or rotation entity FROM CONTENT.")
-                return 
-            }
-            
-            // Log IDs for comparison (optional, but useful)
-            // Logger.debug("Update: rotationEntity from Content ID: \(rotationEntityFromContent.id), @State rotationEntity ID: \(self.rotationEntity?.id ?? 0)")
-            
-            // Use the rotation entity obtained from the content for checks and modification
-            let currentRotationEntity = rotationEntityFromContent 
 
-            // 1. Ensure Model is in Scene if Loaded
-            // Log status before the check
-            Logger.debug("Update check: isLoaded=\(viewModel.isModelLoaded), rootEntityExists=\(viewModel.rootEntity != nil)")
-            
-            if viewModel.isModelLoaded, let modelRoot = viewModel.rootEntity {
-                 // Log entering the 'isLoaded' block
-                 Logger.debug("Update check: Model IS loaded.")
-                 
-                 // Check if the model is *not* currently a child of the rotation entity from content
-                 let isAlreadyChild = currentRotationEntity.children.contains(where: { $0 === modelRoot })
-                 Logger.debug("Update check: Is model already a child? \(isAlreadyChild)")
-                 
-                 if !isAlreadyChild {
-                    Logger.debug("RealityView update: Model loaded but not in scene. Attempting to add to rotationEntity (ID: \(currentRotationEntity.id)).")
-                    currentRotationEntity.addChild(modelRoot) // Add to the entity from content
-                    
-                    // Verify immediately after adding
-                    let addedSuccessfully = currentRotationEntity.children.contains(where: { $0 === modelRoot })
-                    Logger.debug("RealityView update: Added model. Verification check: \(addedSuccessfully)")
-                    
-                    if addedSuccessfully {
-                         // --- Debug: Inspect Hierarchy After Adding --- 
-                         Logger.debug("\n--- Inspecting Hierarchy After Adding to Scene --- (Root: \(modelRoot.name))")
-                         inspectEntityHierarchy(modelRoot)
-                         Logger.debug("--- End Hierarchy Inspection ---")
-                         // --- End Debug ---
+        }
+        .installGestures()
+        .task {
+            Logger.debug("View .task: Triggering viewModel.loadModel()")
+            await viewModel.loadModel() // Wait for loading to finish
 
-                        // Trigger initial animation AFTER adding to scene
-                        Task {
-                             Logger.debug("RealityView update: Triggering initial updateDisplayModeState after adding model.")
-                             await updateDisplayModeState()
-                         }
-                    } else {
-                         Logger.error("RealityView update: FAILED to add modelRoot as child to rotationEntity.")
-                    }
-                 } else {
-                      // Logger.debug("RealityView update: Model already in scene.") // Can be noisy
-                 }
+            // --- NEW: Add model to scene after loading ---
+            if viewModel.isModelLoaded {
+                Logger.debug("View .task: Model is loaded. Attempting to add to scene.")
+
+                // 1. Get the loaded model root from the ViewModel
+                guard let loadedModelRoot = viewModel.rootEntity else {
+                    Logger.error("View .task: Model loaded but viewModel.rootEntity is nil!")
+                    return
+                }
+
+                // 2. Get the rotation entity created in 'make' (stored in @State)
+                guard let targetRotationEntity = self.rotationEntity else {
+                    // This might happen if .task runs before 'make' completes, though unlikely.
+                    // Or if self.rotationEntity wasn't assigned correctly.
+                    Logger.error("View .task: self.rotationEntity is nil. Cannot add model.")
+                    return
+                }
+
+                // 3. Check if rotationEntity is actually in the scene (important!)
+                //    Adding a child to an entity not yet in a scene can sometimes cause issues.
+                //    The 'make' closure adds parentEntity (which contains rotationEntity) to 'content'.
+                //    By the time loadModel finishes, rotationEntity should be in the scene.
+                guard targetRotationEntity.scene != nil else {
+                     Logger.error("View .task: self.rotationEntity exists but is not yet part of a scene.")
+                     return
+                }
+
+                // 4. Check if the gesture target is ready in the ViewModel
+                guard viewModel.gestureTargetEntity != nil else {
+                    Logger.error("View .task: Model loaded but viewModel.gestureTargetEntity is nil!")
+                    // Decide how to handle this - maybe proceed without gesture? Or log and return?
+                    return
+                }
+                
+                // 5. Add the loaded model to the rotation entity IF it's not already there
+                //    (This check prevents adding it multiple times if the task were to re-run)
+                if !targetRotationEntity.children.contains(where: { $0 === loadedModelRoot }) {
+                    Logger.debug("View .task: Adding loadedModelRoot (ID: \(loadedModelRoot.id)) to rotationEntity (ID: \(targetRotationEntity.id)).")
+                    targetRotationEntity.addChild(loadedModelRoot)
+
+                    // Optional: Verify addition
+                    let added = targetRotationEntity.children.contains(where: { $0 === loadedModelRoot })
+                    Logger.debug("View .task: Model added successfully? \(added)")
+
+                    // 6. Trigger initial state/animations now that the model is in the scene
+                    Logger.debug("View .task: Triggering initial updateDisplayModeState.")
+                    
+                    await updateDisplayModeState()
+
+                } else {
+                    Logger.debug("View .task: Model root was already a child of rotationEntity.")
+                }
             } else {
-                 Logger.debug("Update check: Model IS NOT loaded or rootEntity is nil.")
-            }
-            
-            // 2. Apply Rotation (using entity from content) - REMOVED
-            // let rotationY = simd_quatf(angle: Float(rotationAngle.radians), axis: [0, 1, 0])
-            // currentRotationEntity.transform.rotation = rotationY
-            
-            // 3. Apply Synchronous State (using entity from content)
-            if viewModel.isModelLoaded && currentRotationEntity.children.contains(where: { $0 === viewModel.rootEntity }) {
-                 applyModelStateSynchronously()
+                Logger.error("View .task: viewModel.loadModel() completed but isModelLoaded is false.")
             }
         }
-        .task { 
-             Logger.debug("View .task: Triggering viewModel.loadModel()")
-             await viewModel.loadModel()
-         }
-        .onChange(of: rotationAngle) { newValue in
-            // Apply rotation to the entityToRotate when the angle changes
-            guard let entity = entityToRotate else { return }
-            Logger.debug("onChange(rotationAngle): Applying rotation.")
-            let rotationY = simd_quatf(angle: Float(newValue.radians), axis: [0, 1, 0])
-            entity.transform.rotation = rotationY
-         }
-        .onChange(of: viewModel.displayMode) { newValue in
+        .onChange(of: viewModel.displayMode) { oldValue, newValue in
             Logger.debug("Display mode changed. Triggering async updateDisplayModeState.")
             Task {
                  await updateDisplayModeState()
              }
-        }
-        .gesture(
-            // Keep DragGesture for rotation - Updates @State rotationAngle
-            DragGesture()
-                .targetedToEntity(viewModel.gestureTargetEntity ?? Entity())
-                .onChanged { value in
-                    // Cancel any existing rotation animation
-                    timer?.invalidate()
-                    timer = nil
-                    
-                    // Calculate drag delta and time delta
-                    let now = CACurrentMediaTime()
-                    let timeDelta = Float(now - lastUpdateTime)
-                    
-                    // Convert drag to rotation
-                    let rotationDelta = SIMD2<Double>(Double(value.translation.width - dragOffset.width), 
-                                                     Double(value.translation.height - dragOffset.height))
-                    dragOffset = value.translation
-                    
-                    // Apply rotation delta to state (Use Double for Angle math)
-                    rotationAngle += Angle(radians: rotationDelta.x * 0.01) 
-                    // Limit pitch rotation (x-axis)
-                    let limitedPitch = min(max(rotationAngle.radians, -0.5), 0.5)
-                    rotationAngle = Angle(radians: limitedPitch) // Convert back to Angle
-                    
-                    // Update rotation velocity based on delta
-                    let deltaTime = max(0.001, now - lastUpdateTime) // Use the 'now' declared earlier
-                    rotationVelocity.x = Float(rotationDelta.x / deltaTime) // Convert result to Float for SIMD
-                    rotationVelocity.y = Float(rotationDelta.y / deltaTime) // Convert result to Float for SIMD
-                    lastUpdateTime = now
-                    
-                    isDragging = true
-                }
-                .onEnded { _ in
-                    isDragging = false
-                    startContinuousRotation() // Momentum
-                }
-        )
-        .gesture(
-             // Keep simplified TapGesture 
-             TapGesture()
-                 .targetedToAnyEntity()
-                 .onEnded { value in
-                    let hitEntity = value.entity
-                    // ... debug inspection ...
-                    Task { 
-                         await handleTap(on: hitEntity)
-                     }
-                 }
-         )
-        .onDisappear {
-            // Clean up timer
-            timer?.invalidate()
-            timer = nil
         }
         .onAppear {
             Logger.debug("MoleculesModelView appeared.")
             // If model is already loaded but view is appearing again, ensure state is correct.
             if viewModel.isModelLoaded {
                 Task {
-                    await applyModelStateSynchronously()
+                    applyModelStateSynchronously()
                 }
             }
         }
@@ -200,44 +124,6 @@ struct MoleculesModelView: View {
         }
     }
     
-    // Start continuous rotation with momentum
-    private func startContinuousRotation() {
-        timer?.invalidate()
-        
-        // Only start if we have meaningful velocity
-        let velocityMagnitude = sqrt(
-            rotationVelocity.x * rotationVelocity.x +
-            rotationVelocity.y * rotationVelocity.y
-        )
-        
-        if velocityMagnitude < 0.0001 {
-            return
-        }
-        
-        // Create a timer for smooth animation
-        timer = Timer.scheduledTimer(withTimeInterval: 1/60, repeats: true) { _ in
-            // Apply friction to gradually reduce velocity
-            rotationVelocity *= 0.95
-            
-            // Apply velocity to rotation angle
-            rotationAngle += Angle(radians: Double(rotationVelocity.x) * 0.01) // Convert velocity component to Double
-            
-            // Limit pitch rotation (x-axis)
-            let limitedPitch = min(max(rotationAngle.radians, -0.5), 0.5)
-            rotationAngle = Angle(radians: limitedPitch) // Convert back to Angle
-            
-            // Stop when velocity becomes very small
-            let currentMagnitude = sqrt(
-                rotationVelocity.x * rotationVelocity.x +
-                rotationVelocity.y * rotationVelocity.y
-            )
-            
-            if currentMagnitude < 0.0001 {
-                timer?.invalidate()
-                timer = nil
-            }
-        }
-    }
     
     // Synchronous state update function - ONLY ensures target entities are enabled
     private func applyModelStateSynchronously() {
@@ -382,79 +268,6 @@ struct MoleculesModelView: View {
             }
         }
         Logger.debug("Display Mode Animations complete")
-    }
-    
-    // NEW function to handle tap gestures
-    @MainActor
-    private func handleTap(on hitEntity: Entity) async { 
-        // Immediately ignore taps on the dedicated rotation target
-        guard hitEntity.name != "gestureTarget" else {
-            Logger.debug("Tap gesture hit the 'gestureTarget' entity, ignoring.")
-            return
-        }
-
-        // Function to find the relevant molecule entity by checking against stored references
-        func findTargetMolecule(_ startEntity: Entity) -> Entity? {
-            var currentEntity: Entity? = startEntity
-            while let entity = currentEntity {
-                // Check if the current entity in the hierarchy IS one of the target molecule entities BY NAME
-                if entity.name == "HER2" {
-                    return entity // Return the entity found in the hierarchy
-                }
-                if entity.name == "Trastuzumab" {
-                    return entity // Return the entity found in the hierarchy
-                }
-                if entity.name == "Pertuzumab" {
-                    return entity // Return the entity found in the hierarchy
-                }
-                // If no match, move up to the parent
-                currentEntity = entity.parent
-            }
-            return nil // Reached root without finding a match by name
-        }
-        
-        // Find the molecule entity by walking up from the raycast hit
-        guard let moleculeEntity = findTargetMolecule(hitEntity) else {
-            Logger.debug("Raycast hit '\(hitEntity.name)' but no target molecule (HER2/Trastuzumab/Pertuzumab) found in its hierarchy by reference.")
-            return
-        }
-        
-        Logger.debug("Target molecule identified via raycast + hierarchy walk: \(moleculeEntity.name)")
-        let moveDistance: Float = 0.125
-        let animationDuration: TimeInterval = 0.4 // Adjust as needed
-        
-        // Use the found moleculeEntity for the animation logic
-        switch moleculeEntity.name {
-        case "HER2":
-            // Ensure we use the identified entity, though viewModel reference might be redundant now
-            // Guard let her2 = viewModel.her2Entity else { return }
-            let deltaX = viewModel.her2IsMoved ? -moveDistance : moveDistance
-            let delta = SIMD3<Float>(deltaX, 0, 0)
-            await moleculeEntity.animatePosition(to: delta, duration: animationDuration, timing: .easeInOut)
-            viewModel.her2IsMoved.toggle()
-            Logger.debug("HER2 moved. IsMoved: \(viewModel.her2IsMoved)")
-            
-        case "Trastuzumab":
-            // Guard let trastuzumab = viewModel.trastuzumabEntity else { return }
-            let deltaX = viewModel.trastuzumabIsMoved ? moveDistance : -moveDistance // Moves left initially
-            let delta = SIMD3<Float>(deltaX, 0, 0)
-            await moleculeEntity.animatePosition(to: delta, duration: animationDuration, timing: .easeInOut)
-            viewModel.trastuzumabIsMoved.toggle()
-             Logger.debug("Trastuzumab moved. IsMoved: \(viewModel.trastuzumabIsMoved)")
-
-        case "Pertuzumab":
-            // Guard let pertuzumab = viewModel.pertuzumabEntity else { return }
-            let deltaX = viewModel.pertuzumabIsMoved ? moveDistance : -moveDistance // Moves left initially
-            let delta = SIMD3<Float>(deltaX, 0, 0)
-            await moleculeEntity.animatePosition(to: delta, duration: animationDuration, timing: .easeInOut)
-            viewModel.pertuzumabIsMoved.toggle()
-             Logger.debug("Pertuzumab moved. IsMoved: \(viewModel.pertuzumabIsMoved)")
-
-        default:
-            // This case should technically not be reached due to the findTargetMolecule guard
-            Logger.error("Reached default case in handleTap unexpectedly for entity: \(moleculeEntity.name)")
-            break
-        }
     }
     
     // Debug utility to inspect entity hierarchies (from user)

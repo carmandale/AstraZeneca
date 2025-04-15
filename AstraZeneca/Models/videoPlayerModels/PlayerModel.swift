@@ -65,6 +65,22 @@ enum Presentation {
         configureAudioExperience(for: presentation)
     }
     
+    /// Loads a pre-created AVPlayerItem for playback.
+    /// - Parameters:
+    ///   - item: The AVPlayerItem to load.
+    ///   - presentation: The style in which to present the player.
+    func loadPreparedItem(item: AVPlayerItem, presentation: Presentation) {
+        isPlaybackComplete = false
+        player.replaceCurrentItem(with: item) // Use the provided item
+        // Reset player head time to beginning if needed
+        player.seek(to: .zero)
+        
+        self.presentation = presentation
+        // Configure audio experience based on presentation mode
+        configureAudioExperience(for: presentation)
+        print("PlayerModel loaded prepared AVPlayerItem.")
+    }
+    
     /// Starts video playback.
     func play() {
         isPlaying = true

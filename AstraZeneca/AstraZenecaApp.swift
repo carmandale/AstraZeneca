@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import RealityKitContent
 
 @main
 struct AstraZenecaApp: App {
@@ -14,6 +15,12 @@ struct AstraZenecaApp: App {
     @State private var appModel = AppModel()
     @State private var playerModel = PlayerModel()
     @State private var viewModel = MoleculesViewModel()
+    
+    init() {
+        RealityKitContent.GestureComponent.registerComponent()
+        RotationComponent.registerComponent()
+        RotationSystem.registerSystem()
+    }
 
     var body: some Scene {
         // Single window approach - content changes based on appModel.presentation

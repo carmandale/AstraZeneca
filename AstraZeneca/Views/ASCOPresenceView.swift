@@ -115,10 +115,11 @@ struct ASCOPresenceView: View {
                 Image("chart")
                     .resizable()
                     .scaledToFit()
-                    .clipShape(Circle())
+                    // Apply shadow BEFORE clipping
+                    .shadow(radius: 5, x: 5, y: 5) 
+                    .clipShape(Circle()) // Clip AFTER shadow
                     .background(debugEnabled ? Color.green.opacity(0.3) : Color.clear)
                     .offset(z: animateChart ? depth * 3 : 0)
-                    .shadow(radius: 5, x: 5, y: 5)
                     .onAppear {
                         withAnimation(.easeOut(duration: 2.0)) {
                             animateChart = true
@@ -172,7 +173,7 @@ struct TumorTypeDetailView: View {
                 }
             }
         }
-        // Minimal extra padding so you see the content “centered”
+        // Minimal extra padding so you see the content "centered"
         .padding(.vertical, 4)
         // Fill the space given by the parent
         .frame(maxWidth: .infinity, maxHeight: .infinity)

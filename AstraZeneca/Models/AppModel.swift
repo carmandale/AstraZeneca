@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import AVFoundation
 
 /// Maintains app-wide state
 @MainActor
@@ -35,6 +36,8 @@ class AppModel {
     
     /// URL of the current video to play
     private(set) var currentVideoURL: URL? = nil
+    /// Pre-prepared player item for faster loading
+    private var preparedPlayerItem: AVPlayerItem? = nil
     
     /// Video title for display
     let videoTitle = "AstraZeneca Corporate Video"
@@ -52,22 +55,25 @@ class AppModel {
         // Load the video at startup so it's always available
         if let url = Bundle.main.url(forResource: "AZ_owl", withExtension: "mov") {
             currentVideoURL = url
+            // Create AVPlayerItem here for pre-loading
+            preparedPlayerItem = AVPlayerItem(url: url)
             print("currentVideoURL = \(url)")
+            print("AVPlayerItem prepared.")
         } else {
             print("Error: Could not find AZ_owl.mov in bundle.")
         }
     }
 
-    /// Prepares and shows the video player.
-    /// This is the main entry point for playing the video from any view.
+    /// Prepares and shows the video player using the preloaded item.
     func playVideo(playerModel: PlayerModel) {
-        guard let url = currentVideoURL else {
-            print("Error: No video URL available to play")
+        // Use the prepared item instead of the URL
+        guard let item = preparedPlayerItem else {
+            print("Error: No prepared player item available")
             return
         }
         
-        // Load the video into the player
-        playerModel.loadVideo(url: url, presentation: .fullWindow)
+        // Tell PlayerModel to load using the item
+        playerModel.loadPreparedItem(item: item, presentation: .fullWindow)
         
         // Switch to full-window presentation mode
         presentation = .fullWindow
@@ -75,12 +81,16 @@ class AppModel {
         // Start playback
         playerModel.play()
         
-        print("Video playback started with URL: \(url)")
+        print("Video playback initiated with prepared item.")
     }
 
     /// Hides the video player and resets the presentation
     func stopVideo() {
-        // Reset to normal presentation
-        presentation = .normal
+        // Reset to normal presentation asynchronously to avoid update cycle conflicts
+        DispatchQueue.main.async {
+            self.presentation = .normal
+            print("Presentation reset to normal.")
+        }
+        // Consider if playerModel.reset() needs to be called here or is handled by the player view dismissal
     }
 }

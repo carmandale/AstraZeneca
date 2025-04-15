@@ -20,18 +20,29 @@ struct MoleculesView: View {
     
     var body: some View {
         GeometryReader { proxy in
-            let textWidth = min(max(proxy.size.width * 0.4, 300), 500)
+            let textWidth = min(max(proxy.size.width * 0.6, 300), 500)
             let imageWidth = min(max(proxy.size.width - textWidth, 300), 700)
             
             ZStack {
                 HStack(spacing: 60) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("HER2, Trastuzumab, and Pertuzumab Interaction")
+                        Image("AZ-logo") // This is the 2D logo, part of main content
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 80)
+                            .padding(.bottom, 20)
+                        
+                        Text("Targeting HER2: Precision Therapies in Action")
                             .font(.system(size: 50, weight: .bold))
+                            .padding(.bottom, 5)
+                            .accessibilitySortPriority(5)
+                        
+                        Text("Unlocking New Potential with Trastuzumab and Pertuzumab")
+                            .font(.system(size: 30, weight: .semibold))
                             .padding(.bottom, 15)
                             .accessibilitySortPriority(4)
                         
-                        Text("HER2 (Human Epidermal growth factor Receptor 2) is a protein that promotes the growth of cancer cells. In some breast cancers, the HER2 gene makes too many copies of itself, leading to overexpression of HER2 receptors on cancer cells, known as HER2-positive breast cancer.\n\nTrastuzumab (Herceptin) is a monoclonal antibody that binds to domain IV of the HER2 receptor, preventing activation and marking the cell for immune destruction. Pertuzumab (Perjeta) binds to a different region, domain II, blocking HER2 from pairing with other HER receptors. Together, these antibodies provide a comprehensive blockade of HER2 signaling, improving treatment outcomes.")
+                        Text("HER2 (Human Epidermal Growth Factor Receptor 2) drives aggressive tumor growth in certain breast cancers. AstraZeneca's targeted therapies, Trastuzumab (Herceptin) and Pertuzumab (Perjeta), selectively bind to HER2 receptors, disrupting cancer cell signaling pathways. By precisely blocking receptor interactions, these treatments significantly improve clinical outcomes for patients with HER2-positive breast cancer.")
                             .padding(.bottom, 24)
                             .accessibilitySortPriority(3)
                         

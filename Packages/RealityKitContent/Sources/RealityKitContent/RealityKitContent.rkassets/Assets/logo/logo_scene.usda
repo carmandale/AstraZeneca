@@ -10,6 +10,9 @@
 
 def Xform "Root"
 {
+    float3 xformOp:scale = (0.25, 0.25, 0.25)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
     def "logo" (
         active = true
         customData = {
@@ -21,6 +24,19 @@ def Xform "Root"
         quatf xformOp:orient = (0.70710677, -0.70710677, 0, 0)
         float3 xformOp:scale = (1, 1, 1)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def RealityKitComponent "ImageBasedLight"
+    {
+        asset ibl = @../courtyard.hdr@
+        uniform token info:id = "RealityKit.ImageBasedLight"
+        bool isGlobalIBL = 0
+    }
+
+    def RealityKitComponent "ImageBasedLightReceiver"
+    {
+        rel iblEntity = </Root>
+        uniform token info:id = "RealityKit.ImageBasedLightReceiver"
     }
 }
 
