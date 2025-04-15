@@ -42,6 +42,11 @@ class AppModel {
     /// Video description for display
     let videoDescription = "Learn more about AstraZeneca's mission, values, and commitment to advancing healthcare."
     
+    // MARK: - Molecules Window State
+    
+    /// Whether the volumetric molecules window is currently showing
+    var isShowingMolecules: Bool = false
+    
     init() {
         print("Initializing AppModel...")
         // Load the video at startup so it's always available

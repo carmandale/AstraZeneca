@@ -12,7 +12,7 @@ struct PlayerView: View {
                 print("PlayerView is appearing and play is called!")
                 
                 // Ensure proper video is loaded
-                if let url = appModel.currentVideoURL {
+                if appModel.currentVideoURL != nil {
                     // Make sure we're in full window presentation mode
                     playerModel.setPresentation(.fullWindow)
                     playerModel.play()

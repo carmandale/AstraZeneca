@@ -1,0 +1,220 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Reality Composer Pro Version 2.0 (448.100.13)"
+    }
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    reorder nameChildren = ["CompleteStructure", "ImageBasedLightReceiver", "ImageBasedLight"]
+    def "CompleteStructure" (
+        active = true
+        customData = {
+            float3 rotationEulerHint = (-1.5707964, 0, 0)
+        }
+        references = @HER2.usdc@
+    )
+    {
+        quatf xformOp:orient = (0.70710677, -0.70710677, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        over "_n8z_pdb1_gz"
+        {
+            over "_n8z_pdb1_gz_A_SES_surface" (
+                active = false
+            )
+            {
+            }
+
+            over "_n8z_pdb1_gz_B_SES_surface" (
+                active = false
+            )
+            {
+            }
+        }
+
+        over "_oge"
+        {
+            reorder nameChildren = ["InputTarget", "Collider", "Trastuzumab", "Pertuzumab", "HER2", "gestureTarget"]
+            over "_oge_E_SES_surface"
+            {
+            }
+
+            over "_oge_B_SES_surface"
+            {
+            }
+
+            over "_oge_C_SES_surface"
+            {
+            }
+
+            over "_oge_D_SES_surface"
+            {
+            }
+
+            over "Trastuzumab"
+            {
+                def RealityKitComponent "HierarchicalFade"
+                {
+                    uniform token info:id = "RealityKit.HierarchicalFade"
+                }
+
+                def RealityKitComponent "InputTarget"
+                {
+                    uniform token info:id = "RealityKit.InputTarget"
+                }
+
+                def RealityKitComponent "Collider"
+                {
+                    uint group = 1
+                    uniform token info:id = "RealityKit.Collider"
+                    uint mask = 4294967295
+                    token type = "Default"
+
+                    def RealityKitStruct "Shape"
+                    {
+                        float3 extent = (66.78916, 51.784767, 79.93761)
+                        token shapeType = "Box"
+
+                        def RealityKitStruct "pose"
+                        {
+                            float3 position = (1.6128998, -33.73377, 26.53716)
+                        }
+                    }
+                }
+            }
+
+            over "Pertuzumab"
+            {
+                def RealityKitComponent "HierarchicalFade"
+                {
+                    uniform token info:id = "RealityKit.HierarchicalFade"
+                }
+
+                def RealityKitComponent "InputTarget"
+                {
+                    uniform token info:id = "RealityKit.InputTarget"
+                }
+
+                def RealityKitComponent "Collider"
+                {
+                    uint group = 1
+                    uniform token info:id = "RealityKit.Collider"
+                    uint mask = 4294967295
+                    token type = "Default"
+
+                    def RealityKitStruct "Shape"
+                    {
+                        float3 extent = (56.507286, 75.35068, 60.36764)
+                        token shapeType = "Box"
+
+                        def RealityKitStruct "pose"
+                        {
+                            float3 position = (2.2490158, 38.876083, 12.149393)
+                        }
+                    }
+                }
+            }
+
+            over "HER2"
+            {
+                def RealityKitComponent "HierarchicalFade"
+                {
+                    uniform token info:id = "RealityKit.HierarchicalFade"
+                    float opacity = 1
+                }
+
+                def RealityKitComponent "InputTarget"
+                {
+                    uniform token info:id = "RealityKit.InputTarget"
+                }
+
+                def RealityKitComponent "Collider"
+                {
+                    uint group = 1
+                    uniform token info:id = "RealityKit.Collider"
+                    uint mask = 4294967295
+                    token type = "Default"
+
+                    def RealityKitStruct "Shape"
+                    {
+                        float3 extent = (108.227554, 92.02575, 86.80931)
+                        token shapeType = "Box"
+
+                        def RealityKitStruct "pose"
+                        {
+                            float3 position = (1.3721428, -11.999374, -24.214323)
+                        }
+                    }
+                }
+            }
+
+            over "InputTarget" (
+                active = false
+            )
+            {
+            }
+
+            over "Collider" (
+                active = false
+            )
+            {
+            }
+
+            def Xform "gestureTarget" (
+                active = true
+            )
+            {
+                quatf xformOp:orient = (0.6530335, -0.27119613, 0.7003598, 0.09744723)
+                float3 xformOp:scale = (100.00009, 100.0001, 100.00009)
+                float3 xformOp:translate = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def RealityKitComponent "InputTarget"
+                {
+                    uniform token info:id = "RealityKit.InputTarget"
+                }
+
+                def RealityKitComponent "Collider"
+                {
+                    uint group = 1
+                    uniform token info:id = "RealityKit.Collider"
+                    uint mask = 4294967295
+                    token type = "Default"
+
+                    def RealityKitStruct "Shape"
+                    {
+                        float3 extent = (1.4, 1.4, 1.4)
+                        token shapeType = "Box"
+
+                        def RealityKitStruct "pose"
+                        {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    def RealityKitComponent "ImageBasedLightReceiver"
+    {
+        rel iblEntity = </Root>
+        uniform token info:id = "RealityKit.ImageBasedLightReceiver"
+    }
+
+    def RealityKitComponent "ImageBasedLight"
+    {
+        token blendMode = "single"
+        bool enableBlend = 0
+        asset ibl = @../courtyard.hdr@
+        uniform token info:id = "RealityKit.ImageBasedLight"
+        float intensityExponent = 0
+        bool isGlobalIBL = 0
+    }
+}
+

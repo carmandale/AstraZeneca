@@ -15,6 +15,7 @@ struct ContentView: View {
     /// App-wide state
     @Environment(AppModel.self) private var appModel
     @Environment(PlayerModel.self) private var playerModel
+    @Environment(MoleculesViewModel.self) private var viewModel
     
     @State private var selection = 1
     @State private var opacity: Double = 0.0  // Local opacity state
@@ -62,11 +63,21 @@ struct ContentView: View {
                     Label("ADC Portfolio", systemImage: "briefcase")
                 }
                 
-                // Fourth tab item for Video Player - now automatically opens video
+                // New Molecules Tab
+                NavigationStack {
+                    MoleculesView()
+                        .environment(viewModel)
+                }
+                .tag(4)
+                .tabItem {
+                    Label("Molecules", systemImage: "atom")
+                }
+                
+                // Video Player Tab - moved to tag 5
                 NavigationStack {
                     VideoView()
                 }
-                .tag(4)
+                .tag(5)
                 .tabItem {
                     Label("Watch Video", systemImage: "play.circle.fill")
                 }
